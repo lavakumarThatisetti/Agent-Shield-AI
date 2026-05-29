@@ -1,0 +1,228 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AgentStatus {
+  ACTIVE
+  PAUSED
+  REVOKED
+}
+
+enum RiskTier {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+enum PolicyEffect {
+  ALLOW
+  REQUIRE_APPROVAL
+  DENY
+}
+
+enum RunStatus {
+  COMPLETED
+  BLOCKED
+  APPROVAL_REQUIRED
+  APPROVED
+  DENIED
+}
+
+enum ToolDecision {
+  ALLOWED
+  BLOCKED
+  APPROVAL_REQUIRED
+  NOT_REACHED
+  APPROVED
+  DENIED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  DENIED
+}
+
+model AgentIdentity {
+  id            String             @id @default(cuid())
+  agentKey      String             @unique
+  displayName   String
+  provider      String             @default("Custom")
+  modelName     String             @default("External agent")
+  environment   String             @default("Production")
+  sponsorName   String
+  sponsorEmail  String
+  purpose       String
+  status        AgentStatus        @default(ACTIVE)
+  riskTier      RiskTier           @default(MEDIUM)
+  allowedTools  Json
+  deniedActions Json
+  dataBoundary  Json
+  createdAt     DateTime           @default(now())
+  updatedAt     DateTime           @updatedAt
+  policyRules   PolicyRule[]
+  runs          AgentRun[]
+  incidents     SecurityIncident[]
+  scenarios     RuntimeScenario[]
+  approvals     ApprovalRequest[]
+}
+
+model PolicyRule {
+  id          String        @id @default(cuid())
+  agentId     String
+  agent       AgentIdentity @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  name        String
+  description String
+  action      String
+  effect      PolicyEffect
+  severity    RiskTier      @default(MEDIUM)
+  conditions  Json
+  createdAt   DateTime      @default(now())
+}
+
+model AgentRun {
+  id              String             @id @default(cuid())
+  agentId         String
+  agent           AgentIdentity      @relation(fields: [agentId], references: [id], onDelete: Cascade)
+  emailMessageId  String?
+  emailMessage    EmailMessage?      @relation(fields: [emailMessageId], references: [id], onDelete: SetNull)
+  userTask        String
+  sourceType      String
+  sourceContent   String
+  plan            Json
+  plannerMode     String             @default("deterministic")
+  plannerModel    String             @default("")
+  plannerSummary  String             @default("")
+  riskScore       Int
+  status          RunStatus
+  decisionSummary String
+  reasons         Json
+  createdAt       DateTime           @default(now())
+  toolCalls       ToolCall[]
+  incidents       SecurityIncident[]
+  approvals       ApprovalRequest[]
+}
+
+model ToolCall {
+  id             String       @id @default(cuid())
+  runId          String
+  run            AgentRun     @relation(fields: [runId], references: [id], onDelete: Cascade)
+  sequence       Int          @default(0)
+  toolName       String
+  requestedBy    String       @default("agent")
+  stage          String       @default("Policy checked")
+  description    String
+  input          Json
+  output         Json         @default("{}")
+  evidence       String       @default("")
+  policyName     String       @default("")
+  riskScore      Int
+  policyDecision ToolDecision
+  reasons        Json
+  createdAt      DateTime     @default(now())
+  approvals      ApprovalRequest[]
+}
+
+model SecurityIncident {
+  id          String         @id @default(cuid())
+  agentId     String?
+  agent       AgentIdentity? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  runId       String?
+  run         AgentRun?      @relation(fields: [runId], references: [id], onDelete: SetNull)
+  title       String
+  severity    RiskTier
+  category    String
+  description String
+  evidence    String
+  createdAt   DateTime       @default(now())
+}
+
+model ApprovalRequest {
+  id              String          @id @default(cuid())
+  agentId         String?
+  agent           AgentIdentity?  @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  runId           String
+  run             AgentRun        @relation(fields: [runId], references: [id], onDelete: Cascade)
+  toolCallId      String?
+  toolCall        ToolCall?       @relation(fields: [toolCallId], references: [id], onDelete: SetNull)
+  status          ApprovalStatus  @default(PENDING)
+  requestedAction String
+  policyName      String
+  riskScore       Int
+  reason          String
+  evidence        String
+  reviewerName    String?
+  reviewerNote    String?
+  reviewedAt      DateTime?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+}
+
+model CustomerProfile {
+  id             String          @id @default(cuid())
+  externalId     String          @unique
+  name           String
+  email          String
+  company        String
+  plan           String
+  healthScore    Int
+  openTickets    Int
+  annualValue    Int
+  notes          String
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  emails         EmailMessage[]
+  supportTickets SupportTicket[]
+}
+
+model EmailMessage {
+  id            String           @id @default(cuid())
+  emailId       String           @unique
+  fromName      String
+  fromEmail     String
+  customerName  String
+  subject       String
+  content       String
+  scenario      String
+  riskLabel     String
+  receivedAt    DateTime         @default(now())
+  customerId    String?
+  customer      CustomerProfile? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  runs          AgentRun[]
+  supportTickets SupportTicket[]
+}
+
+model SupportTicket {
+  id             String           @id @default(cuid())
+  ticketKey      String           @unique
+  customerId     String?
+  customer       CustomerProfile? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  emailMessageId String?
+  emailMessage   EmailMessage?    @relation(fields: [emailMessageId], references: [id], onDelete: SetNull)
+  runId          String?
+  status         String           @default("OPEN")
+  priority       String           @default("MEDIUM")
+  summary        String
+  createdAt      DateTime         @default(now())
+}
+
+model RuntimeScenario {
+  id            String         @id @default(cuid())
+  scenarioKey   String         @unique
+  title         String
+  category      String
+  agentId       String?
+  agent         AgentIdentity? @relation(fields: [agentId], references: [id], onDelete: SetNull)
+  userGoal      String
+  sourceType    String
+  sourceName    String
+  sourceContent String
+  status        String         @default("ACTIVE")
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+}
