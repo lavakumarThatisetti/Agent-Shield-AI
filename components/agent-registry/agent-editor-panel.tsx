@@ -77,8 +77,8 @@ export function AgentEditorPanel({
               <TextField label="Provider" placeholder="Anthropic Claude" value={value.provider} onChange={(provider) => setValue({ ...value, provider })} />
               <TextField label="Runtime" placeholder="Claude enterprise assistant" value={value.modelName} onChange={(modelName) => setValue({ ...value, modelName })} />
               <TextField label="Environment" placeholder="Production" value={value.environment} onChange={(environment) => setValue({ ...value, environment })} />
-              <TextField label="Owner" placeholder="Maya Srinivasan" value={value.sponsorName} onChange={(sponsorName) => setValue({ ...value, sponsorName })} />
-              <TextField label="Owner email" placeholder="maya@company.com" value={value.sponsorEmail} onChange={(sponsorEmail) => setValue({ ...value, sponsorEmail })} type="email" />
+              <TextField label="Owner" placeholder="Lava kumar" value={value.sponsorName} onChange={(sponsorName) => setValue({ ...value, sponsorName })} />
+              <TextField label="Owner email" placeholder="lava@company.com" value={value.sponsorEmail} onChange={(sponsorEmail) => setValue({ ...value, sponsorEmail })} type="email" />
               <SelectField
                 label="Status"
                 value={value.status}

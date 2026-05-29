@@ -9,8 +9,8 @@ const agents = [
     provider: "Anthropic Claude",
     modelName: "Claude enterprise assistant",
     environment: "Production",
-    sponsorName: "Maya Srinivasan",
-    sponsorEmail: "maya@contoso.example",
+    sponsorName: "Lava Kumar",
+    sponsorEmail: "lava@contoso.example",
     purpose:
       "Autonomously triage support emails, retrieve approved account context, create tickets, and draft customer replies while operating behind AgentShield policy enforcement.",
     status: "ACTIVE",
@@ -42,7 +42,7 @@ const agents = [
     provider: "OpenAI",
     modelName: "GPT research runner",
     environment: "Staging",
-    sponsorName: "Arjun Mehta",
+    sponsorName: "Arjun Kumar",
     sponsorEmail: "arjun@contoso.example",
     purpose:
       "Browse public pages, extract facts, and produce citations. Webpage text is always treated as untrusted content.",
