@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { toPrismaJson } from "@/lib/json";
 import { prisma } from "@/lib/prisma";
 import { ensureDemoDataForDevelopment } from "@/lib/seed";
 import { toAgentSnapshot } from "@/lib/agents/snapshot";
@@ -59,14 +60,14 @@ export async function POST(request: Request) {
       userTask: evaluation.userGoal,
       sourceType: evaluation.sourceType,
       sourceContent: evaluation.sourceContent,
-      plan: evaluation.toolCalls.map((tool) => tool.toolName),
+      plan: toPrismaJson(evaluation.toolCalls.map((tool) => tool.toolName)),
       plannerMode: evaluation.planner.mode,
       plannerModel: evaluation.planner.model,
       plannerSummary: evaluation.planner.summary,
       riskScore: evaluation.riskScore,
       status: evaluation.status,
       decisionSummary: evaluation.decisionSummary,
-      reasons: unique(evaluation.toolCalls.flatMap((tool) => tool.reasons)),
+      reasons: toPrismaJson(unique(evaluation.toolCalls.flatMap((tool) => tool.reasons))),
       toolCalls: {
         create: evaluation.toolCalls.map((tool) => ({
           sequence: tool.sequence,
@@ -74,13 +75,13 @@ export async function POST(request: Request) {
           requestedBy: tool.requestedBy,
           stage: tool.stage,
           description: tool.description,
-          input: tool.input,
-          output: tool.output,
+          input: toPrismaJson(tool.input),
+          output: toPrismaJson(tool.output),
           evidence: tool.evidence,
           policyName: tool.policyName,
           riskScore: tool.riskScore,
           policyDecision: tool.policyDecision,
-          reasons: tool.reasons
+          reasons: toPrismaJson(tool.reasons)
         }))
       },
       incidents:

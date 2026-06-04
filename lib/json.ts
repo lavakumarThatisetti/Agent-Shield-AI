@@ -1,3 +1,5 @@
+import type { Prisma } from "@prisma/client";
+
 export function decodeJson<T>(value: unknown, fallback: T): T {
   if (value === null || value === undefined || value === "") return fallback;
 
@@ -8,4 +10,8 @@ export function decodeJson<T>(value: unknown, fallback: T): T {
   } catch {
     return fallback;
   }
+}
+
+export function toPrismaJson(value: unknown): Prisma.InputJsonValue {
+  return value as Prisma.InputJsonValue;
 }

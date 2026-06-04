@@ -1,4 +1,5 @@
 import { prisma } from "./prisma";
+import { toPrismaJson } from "./json";
 
 const agents = [
   {
@@ -222,7 +223,10 @@ export async function ensureSeedData() {
     for (const agent of agents) {
       const created = await prisma.agentIdentity.create({
         data: {
-          ...agent
+          ...agent,
+          allowedTools: toPrismaJson(agent.allowedTools),
+          deniedActions: toPrismaJson(agent.deniedActions),
+          dataBoundary: toPrismaJson(agent.dataBoundary)
         }
       });
 
@@ -300,7 +304,7 @@ function buildRulesForAgent(agentId: string, agentKey: string) {
         action: "support_context_read",
         effect: "ALLOW" as const,
         severity: "LOW" as const,
-        conditions: { tools: ["read_email", "lookup_customer_profile", "fetch_relevant_account_data"] }
+        conditions: toPrismaJson({ tools: ["read_email", "lookup_customer_profile", "fetch_relevant_account_data"] })
       },
       {
         agentId,
@@ -309,7 +313,7 @@ function buildRulesForAgent(agentId: string, agentKey: string) {
         action: "create_support_ticket",
         effect: "ALLOW" as const,
         severity: "LOW" as const,
-        conditions: { tools: ["create_support_ticket"] }
+        conditions: toPrismaJson({ tools: ["create_support_ticket"] })
       },
       {
         agentId,
@@ -318,7 +322,7 @@ function buildRulesForAgent(agentId: string, agentKey: string) {
         action: "send_email",
         effect: "REQUIRE_APPROVAL" as const,
         severity: "MEDIUM" as const,
-        conditions: { recipient: "external" }
+        conditions: toPrismaJson({ recipient: "external" })
       },
       {
         agentId,
@@ -327,7 +331,7 @@ function buildRulesForAgent(agentId: string, agentKey: string) {
         action: "sensitive_data_or_prompt_injection",
         effect: "DENY" as const,
         severity: "HIGH" as const,
-        conditions: { tags: ["indirect_prompt_injection", "exfiltration", "credential_access", "bulk_export"] }
+        conditions: toPrismaJson({ tags: ["indirect_prompt_injection", "exfiltration", "credential_access", "bulk_export"] })
       },
       {
         agentId,
@@ -336,7 +340,7 @@ function buildRulesForAgent(agentId: string, agentKey: string) {
         action: "destructive_or_financial_change",
         effect: "DENY" as const,
         severity: "HIGH" as const,
-        conditions: { tools: ["delete_customer_record", "update_payment_details", "disable_account_restrictions"] }
+        conditions: toPrismaJson({ tools: ["delete_customer_record", "update_payment_details", "disable_account_restrictions"] })
       }
     ];
   }
@@ -350,7 +354,7 @@ function buildRulesForAgent(agentId: string, agentKey: string) {
         action: "indirect_prompt_injection",
         effect: "DENY" as const,
         severity: "HIGH" as const,
-        conditions: { source: "webpage", tags: ["instruction_override"] }
+        conditions: toPrismaJson({ source: "webpage", tags: ["instruction_override"] })
       },
       {
         agentId,
@@ -359,7 +363,7 @@ function buildRulesForAgent(agentId: string, agentKey: string) {
         action: "public_research",
         effect: "ALLOW" as const,
         severity: "LOW" as const,
-        conditions: { tools: ["fetch_url", "extract_page_facts", "summarize_page"] }
+        conditions: toPrismaJson({ tools: ["fetch_url", "extract_page_facts", "summarize_page"] })
       }
     ];
   }
@@ -372,7 +376,7 @@ function buildRulesForAgent(agentId: string, agentKey: string) {
       action: "invoice_triage",
       effect: "ALLOW" as const,
       severity: "LOW" as const,
-      conditions: { tools: ["read_invoice", "classify_invoice", "create_finance_ticket"] }
+      conditions: toPrismaJson({ tools: ["read_invoice", "classify_invoice", "create_finance_ticket"] })
     },
     {
       agentId,
@@ -381,7 +385,7 @@ function buildRulesForAgent(agentId: string, agentKey: string) {
       action: "payment_change",
       effect: "DENY" as const,
       severity: "HIGH" as const,
-      conditions: { tools: ["approve_refund", "update_payment_details", "wire_transfer"] }
+      conditions: toPrismaJson({ tools: ["approve_refund", "update_payment_details", "wire_transfer"] })
     }
   ];
 }

@@ -1,3 +1,5 @@
+import { toPrismaJson } from "@/lib/json";
+
 type AgentRuleSource = {
   allowedTools: string[];
   deniedActions: string[];
@@ -15,7 +17,7 @@ export function buildDefaultPolicyRules(agentId: string, source: AgentRuleSource
       action: "declared_tool_boundary",
       effect: "ALLOW" as const,
       severity: "LOW" as const,
-      conditions: { tools: source.allowedTools }
+      conditions: toPrismaJson({ tools: source.allowedTools })
     },
     {
       agentId,
@@ -24,7 +26,7 @@ export function buildDefaultPolicyRules(agentId: string, source: AgentRuleSource
       action: "human_approval_boundary",
       effect: "REQUIRE_APPROVAL" as const,
       severity: "MEDIUM" as const,
-      conditions: { data: source.dataBoundary.approvalRequired }
+      conditions: toPrismaJson({ data: source.dataBoundary.approvalRequired })
     },
     {
       agentId,
@@ -33,7 +35,7 @@ export function buildDefaultPolicyRules(agentId: string, source: AgentRuleSource
       action: "explicit_deny_boundary",
       effect: "DENY" as const,
       severity: "HIGH" as const,
-      conditions: { tools: source.deniedActions }
+      conditions: toPrismaJson({ tools: source.deniedActions })
     }
   ];
 }

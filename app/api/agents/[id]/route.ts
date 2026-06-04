@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { toPrismaJson } from "@/lib/json";
 import { prisma } from "@/lib/prisma";
 import { ensureDemoDataForDevelopment } from "@/lib/seed";
 import { buildDefaultPolicyRules } from "@/lib/agents/default-policy-rules";
@@ -51,9 +52,9 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
         purpose: parsed.data.purpose,
         status: parsed.data.status,
         riskTier: parsed.data.riskTier,
-        allowedTools: parsed.data.allowedTools,
-        deniedActions: parsed.data.deniedActions,
-        dataBoundary: parsed.data.dataBoundary
+        allowedTools: toPrismaJson(parsed.data.allowedTools),
+        deniedActions: toPrismaJson(parsed.data.deniedActions),
+        dataBoundary: toPrismaJson(parsed.data.dataBoundary)
       }
     }),
     prisma.policyRule.deleteMany({ where: { agentId: id } }),

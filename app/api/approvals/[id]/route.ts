@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { z } from "zod";
+import { toPrismaJson } from "@/lib/json";
 import { prisma } from "@/lib/prisma";
 import { ensureDemoDataForDevelopment } from "@/lib/seed";
 
@@ -70,11 +71,12 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
           stage: parsed.data.status === "APPROVED" ? "Human approved" : "Human denied",
           policyDecision: parsed.data.status,
           policyName: parsed.data.status === "APPROVED" ? "Human approval granted" : "Human approval denied",
-          output:
+          output: toPrismaJson(
             parsed.data.status === "APPROVED"
               ? { approved: true, released: true, reviewer: parsed.data.reviewerName, reviewedAt: reviewedAtIso }
-              : { denied: true, reviewer: parsed.data.reviewerName, reviewedAt: reviewedAtIso },
-          reasons: [reviewedReason, existing.reason]
+              : { denied: true, reviewer: parsed.data.reviewerName, reviewedAt: reviewedAtIso }
+          ),
+          reasons: toPrismaJson([reviewedReason, existing.reason])
         }
       });
     }
@@ -88,13 +90,13 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
             policyDecision: "ALLOWED",
             policyName: "Post-approval execution",
             riskScore: Math.max(tool.riskScore, 18),
-            output: {
+            output: toPrismaJson({
               resumed: true,
               reviewer: parsed.data.reviewerName,
               reviewedAt: reviewedAtIso,
               message: `${tool.toolName} executed after human approval released ${existing.requestedAction}.`
-            },
-            reasons: [`Released after human approval for ${existing.requestedAction}.`, existing.reason]
+            }),
+            reasons: toPrismaJson([`Released after human approval for ${existing.requestedAction}.`, existing.reason])
           }
         });
       }
@@ -108,7 +110,7 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
           parsed.data.status === "APPROVED"
             ? approvedSummary(existing.requestedAction, downstreamTools.length)
             : `${existing.requestedAction} was denied by a human reviewer. Runtime execution remains stopped.`,
-        reasons: [reviewedReason, existing.reason]
+        reasons: toPrismaJson([reviewedReason, existing.reason])
       }
     });
 
