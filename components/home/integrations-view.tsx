@@ -1,5 +1,19 @@
 import { Code2, Network, ShieldCheck, Webhook } from "lucide-react";
 
+const sdkExample = `const decision = await agentShield.checkToolCall({
+  agentId: "claude-support-agent",
+  sourceType: "email",
+  sourceContent: email.body,
+  toolCall: {
+    name: "send_email",
+    input: { to: "attacker@example.com" }
+  }
+});
+
+if (decision.status === "ALLOWED") {
+  await sendEmail(decision.toolCall.input);
+}`;
+
 const requestExample = `{
   "agentId": "agent_identity_id",
   "userGoal": "Triage this inbound request",
@@ -30,7 +44,7 @@ export function IntegrationsView() {
         <div>
           <p className="section-kicker">Deployment surface</p>
           <h2>Connect AgentShield to agent runtimes</h2>
-          <span>Use the same gateway decision contract for REST callers, MCP tool brokers, and security event pipelines.</span>
+          <span>Use the same gateway decision contract for SDK wrappers, REST callers, MCP tool brokers, and security event pipelines.</span>
         </div>
         <ShieldCheck size={20} />
       </div>
@@ -39,10 +53,29 @@ export function IntegrationsView() {
         <article className="integration-card primary">
           <div>
             <Code2 size={18} />
+            <span>SDK wrapper pattern</span>
+          </div>
+          <h3>Check first, forward only if allowed</h3>
+          <p>
+            Developers wrap agent tools with AgentShield. The SDK asks the gateway for a decision before the real email, CRM, finance, browser, or internal API call runs.
+          </p>
+          <div className="integration-code-grid">
+            <CodeBlock title="Tool wrapper" value={sdkExample} />
+          </div>
+          <dl>
+            <Row label="Agent identity" value="Owner, model, allowed tools, denied actions" />
+            <Row label="Untrusted input" value="Email, webpage, invoice, tool response" />
+            <Row label="Decision" value="Allow, block, approval required, not reached" />
+          </dl>
+        </article>
+
+        <article className="integration-card">
+          <div>
+            <ShieldCheck size={18} />
             <span>REST enforcement point</span>
           </div>
           <h3>POST /api/gateway/evaluate</h3>
-          <p>Call this before an autonomous agent invokes tools. The response returns per-tool decisions, risk score, evidence, and audit ID.</p>
+          <p>The current demo endpoint evaluates runtime context, generates proposed tool calls, and returns per-tool decisions, evidence, risk score, and audit ID.</p>
           <div className="integration-code-grid">
             <CodeBlock title="Request" value={requestExample} />
             <CodeBlock title="Decision response" value={responseExample} />
@@ -55,11 +88,11 @@ export function IntegrationsView() {
             <span>MCP interceptor</span>
           </div>
           <h3>Broker tool calls before execution</h3>
-          <p>Route MCP tool proposals through AgentShield, then forward only allowed calls to enterprise tools.</p>
+          <p>Place AgentShield inside the MCP broker. Every proposed tool call is checked before the broker forwards it to the actual MCP tool server.</p>
           <dl>
-            <Row label="Mode" value="Inline policy check" />
-            <Row label="Boundary" value="Agent identity + tool manifest" />
-            <Row label="Output" value="Allow, hold, block" />
+            <Row label="Input" value="Agent ID + proposed MCP tool call" />
+            <Row label="Check" value="Policy, data boundary, threat signals" />
+            <Row label="Forward" value="Only after allow or human approval" />
           </dl>
         </article>
 
